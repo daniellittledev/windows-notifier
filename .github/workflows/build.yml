@@ -20,3 +20,19 @@ jobs:
 
       - name: Build
         run: dotnet build WindowsNotifier.sln --configuration Release --no-restore
+
+      # Exercise the same self-contained single-file publish the release workflow
+      # uses, so a broken publish is caught on the branch rather than at tag time.
+      - name: Publish (verify release packaging)
+        shell: bash
+        run: |
+          set -euo pipefail
+          for proj in Notifier Register ViewMd; do
+            dotnet publish "src/$proj/$proj.fsproj" \
+              --configuration Release \
+              --runtime win-x64 \
+              --self-contained true \
+              -p:PublishSingleFile=true \
+              -p:IncludeNativeLibrariesForSelfExtract=true \
+              --output "publish/$proj"
+          done

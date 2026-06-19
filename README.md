@@ -38,6 +38,23 @@ The AUMID is shared by contract (it is **not** linked between projects):
 
 If they ever diverge, no toast appears — that is the single most common failure.
 
+## Releases
+
+Pushing a version tag builds the three tools as self-contained, single-file
+`win-x64` executables (no .NET install required on the target machine) and
+publishes them as a GitHub Release:
+
+```powershell
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The `.github/workflows/release.yml` workflow zips `notifier.exe`,
+`register.exe`, `viewmd.exe`, the README, and the LICENSE into
+`windows-notifier-v1.0.0-win-x64.zip` and attaches it to the release with
+auto-generated notes. Tags containing a hyphen (e.g. `v1.0.0-rc1`) are marked as
+pre-releases.
+
 ## Build
 
 ```powershell

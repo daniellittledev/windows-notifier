@@ -1,0 +1,70 @@
+name: release
+
+# Cut a GitHub Release whenever a version tag is pushed, e.g.:
+#   git tag v1.0.0 && git push origin v1.0.0
+on:
+  push:
+    tags:
+      - "v*"
+
+# Allow the built-in GITHUB_TOKEN to create the release.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Compute version
+        id: version
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish self-contained executables
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ steps.version.outputs.version }}"
+          for proj in Notifier Register ViewMd; do
+            dotnet publish "src/$proj/$proj.fsproj" \
+              --configuration Release \
+              --runtime win-x64 \
+              --self-contained true \
+              -p:PublishSingleFile=true \
+              -p:IncludeNativeLibrariesForSelfExtract=true \
+              -p:Version="$version" \
+              --output "publish/$proj"
+          done
+          mkdir -p staging
+          cp publish/Notifier/notifier.exe staging/
+          cp publish/Register/register.exe staging/
+          cp publish/ViewMd/viewmd.exe   staging/
+          cp README.md LICENSE staging/
+
+      - name: Package zip
+        shell: pwsh
+        run: |
+          $asset = "windows-notifier-${{ github.ref_name }}-win-x64.zip"
+          Compress-Archive -Path staging/* -DestinationPath $asset
+          "ASSET=$asset" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Create GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          prerelease=""
+          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
+            prerelease="--prerelease"
+          fi
+          gh release create "${GITHUB_REF_NAME}" "${ASSET}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            ${prerelease}
