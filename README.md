@@ -70,50 +70,49 @@ Requires the .NET 8 SDK on Windows. `Notifier` targets
 CsWinRT projection — **no third-party notification library** (no SnoreToast,
 BurntToast, or CommunityToolkit).
 
-## Usage
+## Quick start
 
-### 1. Register once (branding + Action Center persistence)
+Grab the three executables from a [release](#releases) zip (or [build](#build)
+them) and put them somewhere stable, e.g. `C:\tools\notifier\`.
+
+**1. Register once** (no admin needed) so toasts appear branded and persist:
 
 ```powershell
-register.exe --target C:\tools\notifier\notifier.exe
+register.exe                 # run from the folder holding notifier.exe
 ```
 
-`--target` defaults to `notifier.exe` next to `register.exe`.
+**2. Raise a toast:**
 
-### 2. Raise a toast
+```powershell
+notifier.exe --title "Build finished" --message "All tests green"
+```
 
-App deep link (no handler needed — the shell launches it):
+**3. Make it clickable** — `--action` is the URI launched when the toast is
+clicked; `--button "Label=uri"` adds buttons (split on the first `=`):
 
 ```powershell
 notifier.exe --title "Build finished" --message "All tests green" `
-             --action "obsidian://open?path=Vault/Build.md"
-```
-
-With buttons (each `--button` is `Label=uri`, split on the first `=`):
-
-```powershell
-notifier.exe --title "Build finished" --message "All tests green" `
-             --button "Open in app=obsidian://open?path=Vault/Build.md" `
+             --action "obsidian://open?path=Vault/Build.md" `
              --button "View notes=viewmd:C%3A%5Cnotes%5Cbuild.md"
 ```
 
-### 3. Markdown documents → Typora
-
-Register the custom scheme once, then any `viewmd:` URI opens in Typora:
+App deep links (`obsidian://`, `vscode://`, …) need no setup — the shell launches
+them. To open a markdown file in Typora via `viewmd:`, register that handler once:
 
 ```powershell
 viewmd.exe --register
 ```
 
-`viewmd:<url-encoded-path>` strips the scheme, URL-decodes the path, and runs
-`typora.exe "<path>"`. Testable on its own — paste `viewmd:C%3A%5Cnotes%5Cx.md`
-into the Run dialog.
-
 > Point toasts at `viewmd:`, **not** `file:` — `file:` activation from toasts is
-> unreliable/blocked.
+> unreliable/blocked. URL-encode any path embedded in a `viewmd:` URI.
 
-For more invocation patterns (cmd/PowerShell/bash, wrapping a command, calling
-from C#/Node/Python, exit codes), see [docs/cli-usage.md](docs/cli-usage.md).
+### More detail
+
+- **[docs/registration.md](docs/registration.md)** — full registration guide
+  (`--target`, the `viewmd:` handler, undo/re-register, troubleshooting).
+- **[docs/cli-usage.md](docs/cli-usage.md)** — invocation patterns
+  (cmd/PowerShell/bash, wrapping a command, calling from C#/Node/Python, exit
+  codes).
 
 ## Gotchas
 
