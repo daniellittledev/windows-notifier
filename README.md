@@ -112,6 +112,9 @@ into the Run dialog.
 > Point toasts at `viewmd:`, **not** `file:` — `file:` activation from toasts is
 > unreliable/blocked.
 
+For more invocation patterns (cmd/PowerShell/bash, wrapping a command, calling
+from C#/Node/Python, exit codes), see [docs/cli-usage.md](docs/cli-usage.md).
+
 ## Gotchas
 
 - AUMID on the shortcut must equal the AUMID passed to `CreateToastNotifier`.
