@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Windows target for Microsoft.Win32.Registry; no WinRT projection needed. -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <AssemblyName>viewmd</AssemblyName>
+    <RootNamespace>ViewMd</RootNamespace>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Windows 10 SDK target makes the WinRT toast APIs available directly via
+         CsWinRT projection. No third-party notification library required. -->
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <AssemblyName>notifier</AssemblyName>
+    <RootNamespace>Notifier</RootNamespace>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- F# compiles in file order: pure builder first, then entry point. -->
+    <Compile Include="Toast.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+</Project>

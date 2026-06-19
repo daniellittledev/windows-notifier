@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Plain Windows target: only COM interop is needed, no WinRT projection. -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <AssemblyName>register</AssemblyName>
+    <RootNamespace>Register</RootNamespace>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Interop.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+</Project>
