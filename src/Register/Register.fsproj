@@ -6,7 +6,6 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <AssemblyName>register</AssemblyName>
     <RootNamespace>Register</RootNamespace>
-    <Nullable>enable</Nullable>
     <InvariantGlobalization>true</InvariantGlobalization>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>

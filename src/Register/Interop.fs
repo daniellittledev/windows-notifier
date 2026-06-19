@@ -1,5 +1,8 @@
 namespace Register
 
+// Explicit struct layout (PROPVARIANT) generates unverifiable IL by design.
+#nowarn "9"
+
 open System
 open System.Runtime.InteropServices
 
@@ -97,14 +100,14 @@ module Interop =
 
     /// Create a VT_LPWSTR PROPVARIANT. Free it with PropVariantClear.
     let propVariantFromString (value: string) =
-        let mutable pv = PropVariant()
+        let mutable pv = Unchecked.defaultof<PropVariant>
         pv.Vt <- VT_LPWSTR
         pv.Ptr <- Marshal.StringToCoTaskMemUni(value)
         pv
 
     /// Create a VT_CLSID PROPVARIANT. Free it with PropVariantClear.
     let propVariantFromClsid (value: Guid) =
-        let mutable pv = PropVariant()
+        let mutable pv = Unchecked.defaultof<PropVariant>
         let block = Marshal.AllocCoTaskMem(16)
         Marshal.StructureToPtr<Guid>(value, block, false)
         pv.Vt <- VT_CLSID
