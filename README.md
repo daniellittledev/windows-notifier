@@ -55,6 +55,10 @@ The `.github/workflows/release.yml` workflow zips `notifier.exe`,
 auto-generated notes. Tags containing a hyphen (e.g. `v1.0.0-rc1`) are marked as
 pre-releases.
 
+It can also be run manually from the Actions tab (**release → Run workflow**),
+entering the tag to create — useful for testing the pipeline. On a manual run the
+tag is created at the selected ref if it doesn't already exist.
+
 ## Build
 
 ```powershell

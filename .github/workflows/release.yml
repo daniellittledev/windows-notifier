@@ -1,13 +1,21 @@
 name: release
 
-# Cut a GitHub Release whenever a version tag is pushed, e.g.:
+# Cut a GitHub Release either by pushing a version tag, e.g.:
 #   git tag v1.0.0 && git push origin v1.0.0
+# or by running this workflow manually (Actions -> release -> Run workflow) and
+# entering the tag to create.
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version tag to release, e.g. v1.0.0 (created at the selected ref)."
+        required: true
+        type: string
 
-# Allow the built-in GITHUB_TOKEN to create the release.
+# Allow the built-in GITHUB_TOKEN to create the release (and the tag on manual runs).
 permissions:
   contents: write
 
@@ -21,16 +29,28 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Compute version
-        id: version
+      - name: Resolve release tag
+        id: meta
         shell: bash
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+          fi
+          if [[ ! "$tag" =~ ^v[0-9] ]]; then
+            echo "Tag must look like 'v1.2.3' (got '$tag')." >&2
+            exit 1
+          fi
+          echo "tag=$tag"            >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}"    >> "$GITHUB_OUTPUT"
 
       - name: Publish self-contained executables
         shell: bash
         run: |
           set -euo pipefail
-          version="${{ steps.version.outputs.version }}"
+          version="${{ steps.meta.outputs.version }}"
           for proj in Notifier Register ViewMd; do
             dotnet publish "src/$proj/$proj.fsproj" \
               --configuration Release \
@@ -50,7 +70,7 @@ jobs:
       - name: Package zip
         shell: pwsh
         run: |
-          $asset = "windows-notifier-${{ github.ref_name }}-win-x64.zip"
+          $asset = "windows-notifier-${{ steps.meta.outputs.tag }}-win-x64.zip"
           Compress-Archive -Path staging/* -DestinationPath $asset
           "ASSET=$asset" | Out-File -FilePath $env:GITHUB_ENV -Append
 
@@ -58,13 +78,16 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
         run: |
           set -euo pipefail
           prerelease=""
-          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
+          if [[ "${RELEASE_TAG}" == *-* ]]; then
             prerelease="--prerelease"
           fi
-          gh release create "${GITHUB_REF_NAME}" "${ASSET}" \
-            --title "${GITHUB_REF_NAME}" \
+          # On manual runs the tag may not exist yet; gh creates it at the checked-out commit.
+          gh release create "${RELEASE_TAG}" "${ASSET}" \
+            --target "${GITHUB_SHA}" \
+            --title "${RELEASE_TAG}" \
             --generate-notes \
             ${prerelease}
