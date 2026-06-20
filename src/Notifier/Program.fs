@@ -1,9 +1,19 @@
 module Notifier.Program
 
 open System
+open System.Runtime.InteropServices
 open Notifier.Toast
 open Windows.Data.Xml.Dom
 open Windows.UI.Notifications
+
+/// Declare this process's AUMID so Windows ties our toasts to the Start Menu
+/// shortcut the Register tool stamped with the same AUMID. Without this call an
+/// unpackaged Win32 process has a synthesized per-process AUMID that matches no
+/// shortcut, and Windows silently drops every toast — even though CreateToastNotifier
+/// is handed the AUMID explicitly. PreserveSig=false turns a failing HRESULT into
+/// an exception. (shell32: SetCurrentProcessExplicitAppUserModelID)
+[<DllImport("shell32.dll", PreserveSig = false)>]
+extern void SetCurrentProcessExplicitAppUserModelID([<MarshalAs(UnmanagedType.LPWStr)>] string appId)
 
 /// The AUMID this notifier shows toasts under. It MUST match the AUMID set on the
 /// Start Menu shortcut by the Register tool, or Windows shows nothing.
@@ -62,6 +72,9 @@ let rec private parse (acc: Args) (argv: string list) : Result<Args, string> =
 
 /// Show a toast under the given AUMID. The only side effect in the program.
 let private show (aumid: string) (toast: Toast) =
+    // Declare our AUMID before creating the notifier, so Windows resolves the toast
+    // against the registered Start Menu shortcut instead of silently dropping it.
+    SetCurrentProcessExplicitAppUserModelID(aumid)
     let xml = XmlDocument()
     xml.LoadXml(Toast.build toast)
     let notifier = ToastNotificationManager.CreateToastNotifier(aumid)
