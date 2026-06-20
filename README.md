@@ -15,11 +15,14 @@ activation** for everything: the shell launches a URI on click, and it works eve
 when our exe is no longer running.
 
 For an unpackaged Win32 app, displaying branded toasts that persist in Action
-Center requires a Start Menu shortcut carrying an AUMID and a
-`ToastActivatorCLSID`. We use a **stub CLSID** (a fixed random GUID with no COM
-server behind it). The consequence: only protocol-activation toasts work — no
-foreground/background (in-process) activation, and no text-box inputs. We never
-need either; buttons still work.
+Center requires the AUMID to be registered with a `ToastActivatorCLSID`. We use a
+**stub CLSID** (a fixed random GUID): the registration just needs to exist so
+toasts are branded and kept in Action Center — clicks always go through protocol
+activation, never COM. `register.exe` registers the AUMID either directly in the
+registry (default) or on a Start Menu shortcut (`--shortcut`); see
+[docs/registration.md](docs/registration.md). The consequence of the stub CLSID:
+only protocol-activation toasts work — no foreground/background (in-process)
+activation, and no text-box inputs. We never need either; buttons still work.
 
 ## Components
 
@@ -28,7 +31,7 @@ Three small, independent executables (F# / .NET 8).
 | Project    | Output exe   | Role |
 |------------|--------------|------|
 | `Notifier` | `notifier.exe` | `args → toast`. Builds protocol-activation toast XML and shows it. |
-| `Register` | `register.exe` | One-time setup. Creates the Start Menu shortcut with AUMID + stub CLSID. |
+| `Register` | `register.exe` | One-time setup. Registers the AUMID (+ stub CLSID) in the registry by default, or on a Start Menu shortcut with `--shortcut`; `--unregister` removes it. |
 | `ViewMd`   | `viewmd.exe`   | Custom `viewmd:` scheme handler. URL-decodes a path and opens it in Typora. |
 
 The AUMID is shared by contract (it is **not** linked between projects):
@@ -128,14 +131,15 @@ viewmd.exe --register
 ### More detail
 
 - **[docs/registration.md](docs/registration.md)** — full registration guide
-  (`--target`, the `viewmd:` handler, undo/re-register, troubleshooting).
+  (registry vs `--shortcut` methods, `--unregister`, the `viewmd:` handler,
+  troubleshooting).
 - **[docs/cli-usage.md](docs/cli-usage.md)** — invocation patterns
   (cmd/PowerShell/bash, wrapping a command, calling from C#/Node/Python, exit
   codes).
 
 ## Gotchas
 
-- AUMID on the shortcut must equal the AUMID passed to `CreateToastNotifier`.
+- The registered AUMID must equal the AUMID passed to `CreateToastNotifier`.
 - The stub CLSID means no toast text-box inputs and no in-process activation.
   Buttons (actions) still work.
 - URL-encode any path/argument embedded in a custom-scheme URI; the handler decodes it.

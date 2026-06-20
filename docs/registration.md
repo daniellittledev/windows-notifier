@@ -22,9 +22,9 @@ the explicit step below (unless you opt in with the installer's `-Register` flag
 
 ## 1. Register the notifier
 
-This creates a Start Menu shortcut stamped with the AUMID and a stub
-`ToastActivatorCLSID`, which is what makes Windows show the toast branded and keep
-it in Action Center.
+This makes Windows recognise the AUMID `Daniel.CliNotifier` so toasts show branded
+and persist in Action Center. There are two methods; `register.exe` uses the
+**registry** method by default:
 
 ```powershell
 register.exe --target C:\tools\notifier\notifier.exe
@@ -34,32 +34,51 @@ register.exe --target C:\tools\notifier\notifier.exe
 - Omit `--target` to default to `notifier.exe` **next to `register.exe`** — so if
   you keep both in the same folder, just run `register.exe`.
 
-On success it prints the shortcut path, target, AUMID, and CLSID:
+### Registry method (default)
+
+Writes the AUMID registration under
+`HKCU\Software\Classes\AppUserModelId\Daniel.CliNotifier` (a `DisplayName` and a
+`CustomActivator` pointing at the stub CLSID) plus the activator's
+`CLSID\…\LocalServer32`. Windows resolves the AUMID immediately, without depending
+on the shell indexing a Start Menu shortcut. Output:
 
 ```
-Registered.
-  Shortcut: C:\Users\<you>\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\CLI Notifier.lnk
-  Target:   C:\tools\notifier\notifier.exe
-  AUMID:    Daniel.CliNotifier
-  CLSID:    {9C7A2E14-3B6D-4F8A-9E1C-5D2A8B4F6C0E}
+Registered (registry method).
+  AppUserModelId: HKCU\Software\Classes\AppUserModelId\Daniel.CliNotifier
+  Activator:      HKCU\Software\Classes\CLSID\{9C7A2E14-3B6D-4F8A-9E1C-5D2A8B4F6C0E}\LocalServer32
+  Target:         C:\tools\notifier\notifier.exe
+  AUMID:          Daniel.CliNotifier
 ```
 
-> **The one invariant that matters:** the AUMID on this shortcut
-> (`Daniel.CliNotifier`) must equal the AUMID `notifier.exe` shows toasts under.
-> They share the same default, so this just works — unless you pass a custom
-> `--aumid` to `notifier.exe`, in which case you must register with a matching
-> AUMID.
+### Shortcut method (`--shortcut`)
 
-### Undo / re-register
-
-Delete the shortcut to undo:
+The classic Win32 approach: a Start Menu shortcut stamped with the AUMID and the
+stub `ToastActivatorCLSID`. Use it if you want a Start Menu entry or prefer not to
+write the registry registration:
 
 ```powershell
-Remove-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\CLI Notifier.lnk"
+register.exe --target C:\tools\notifier\notifier.exe --shortcut
 ```
 
-Re-running `register.exe` simply overwrites the shortcut — safe to run again any
-time (for example after moving `notifier.exe`).
+> The shortcut method depends on the shell indexing the new shortcut, which can be
+> delayed or — on some Windows builds — not happen at all. If toasts silently never
+> appear with `--shortcut`, use the default registry method instead.
+
+> **The one invariant that matters:** the registered AUMID (`Daniel.CliNotifier`)
+> must equal the AUMID `notifier.exe` shows toasts under. They share the same
+> default, so this just works — unless you pass a custom `--aumid` to `notifier.exe`,
+> in which case you must register with a matching AUMID.
+
+### Unregister / re-register
+
+Remove everything either method created (the shortcut **and** the registry keys):
+
+```powershell
+register.exe --unregister
+```
+
+Re-running `register.exe` is safe any time — it overwrites the existing
+registration (for example after moving `notifier.exe`).
 
 ## 2. Register the `viewmd:` handler (optional)
 
@@ -97,8 +116,8 @@ viewmd:C%3A%5Cnotes%5Cx.md
 
 | Symptom | Likely cause |
 |---------|--------------|
-| No toast appears at all | Step 1 wasn't run, or `notifier.exe` uses a different `--aumid` than was registered. |
-| Toast appears but doesn't persist in Action Center | The shortcut is missing its `ToastActivatorCLSID` — re-run `register.exe`. |
+| No toast appears at all | Step 1 wasn't run, or `notifier.exe` uses a different `--aumid` than was registered. If you used `--shortcut`, the shell may not have indexed it — re-run with the default registry method. |
+| Toast appears but doesn't persist in Action Center | The registration is missing its activator CLSID — re-run `register.exe`. |
 | `viewmd:` link does nothing / opens nothing | Step 2 wasn't run, the path wasn't URL-encoded, or Typora isn't installed / on `PATH`. |
 | Registration points at the wrong exe | You moved the binaries — re-run the relevant register command. |
 
