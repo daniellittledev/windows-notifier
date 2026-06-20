@@ -23,7 +23,7 @@ module Interop =
     /// Minimal PROPVARIANT. We only ever store pointer-sized payloads (a string or a
     /// CLSID pointer), so the explicit layout just needs the discriminator and the
     /// pointer slot; reserved fields default to zero.
-    [<StructLayout(LayoutKind.Explicit, Size = 16)>]
+    [<Struct; StructLayout(LayoutKind.Explicit, Size = 16)>]
     type PropVariant =
         [<FieldOffset(0)>]
         val mutable Vt: uint16
