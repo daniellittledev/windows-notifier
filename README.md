@@ -72,13 +72,32 @@ BurntToast, or CommunityToolkit).
 
 ## Quick start
 
-Grab the three executables from a [release](#releases) zip (or [build](#build)
-them) and put them somewhere stable, e.g. `C:\tools\notifier\`.
+### Install
+
+The quickest way — downloads the latest release, extracts to
+`%LOCALAPPDATA%\Programs\notifier`, and adds it to your user PATH (no admin):
+
+```powershell
+irm https://raw.githubusercontent.com/daniellittledev/windows-notifier/main/install.ps1 | iex
+```
+
+To pin a version, change the location, or register as part of install, download
+and invoke the script with parameters (`-Version`, `-InstallDir`, `-Register`,
+`-NoPath`):
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/daniellittledev/windows-notifier/main/install.ps1))) -Version v1.0.0 -Register
+```
+
+The installer never registers on its own unless you pass `-Register` —
+registration stays an explicit step (below). Or install by hand: grab the three
+executables from a [release](#releases) zip (or [build](#build) them) and put
+them somewhere stable, e.g. `C:\tools\notifier\`.
 
 **1. Register once** (no admin needed) so toasts appear branded and persist:
 
 ```powershell
-register.exe                 # run from the folder holding notifier.exe
+register.exe                 # registers the notifier.exe sitting next to it
 ```
 
 **2. Raise a toast:**
