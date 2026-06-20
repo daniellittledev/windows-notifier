@@ -16,6 +16,10 @@ either from a [release](../README.md#releases) zip or from a local
 [build](../README.md#build). Put them somewhere stable, e.g. `C:\tools\notifier\`
 — the registration records that path, so re-register if you move them.
 
+The [install script](../README.md#install) downloads the executables and adds
+them to your PATH for you, but it deliberately does **not** register — that stays
+the explicit step below (unless you opt in with the installer's `-Register` flag).
+
 ## 1. Register the notifier
 
 This creates a Start Menu shortcut stamped with the AUMID and a stub
